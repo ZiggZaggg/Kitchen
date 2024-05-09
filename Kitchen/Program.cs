@@ -1,11 +1,17 @@
+using Kitchen.Backend.Database;
+using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+var connectionString = builder.Configuration.GetConnectionString("Default");
 
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddMudServices();
+
+builder.Services.AddDbContextFactory<KitchenDbContext>(options =>
+    options.UseSqlServer(connectionString));
 
 var app = builder.Build();
 
