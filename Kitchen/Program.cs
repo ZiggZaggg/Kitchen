@@ -1,4 +1,5 @@
 using Kitchen.Backend.Database;
+using Kitchen.Backend.Services;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 
@@ -9,6 +10,8 @@ var connectionString = builder.Configuration.GetConnectionString("Default");
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddMudServices();
+
+builder.Services.AddTransient<RecipeService>();
 
 builder.Services.AddDbContextFactory<KitchenDbContext>(options =>
     options.UseSqlServer(connectionString));

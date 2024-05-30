@@ -1,0 +1,95 @@
+﻿@page "/cook"
+@using Kitchen.Backend.Models
+@using Kitchen.Backend.Services
+
+@inject RecipeService RecipeService
+
+<MudContainer>
+    <MudGrid>
+        <MudItem xs="4">
+            <MudList Clickable="true">
+                @foreach (var item in _recipes)
+                {
+                    <MudListItem @onclick="() => SelectItem(item)">
+                        @item.Name
+                    </MudListItem>
+                }
+            </MudList>
+            <MudTextField @bind-Value="NewRecipe" Label="Standard" Variant="Variant.Text"></MudTextField>
+            <MudButton Variant="Variant.Filled" OnClick="AddRecipe">Add recipe</MudButton>
+        </MudItem>
+        <MudItem xs="8">
+            @if (_selectedItem != null)
+            {
+                <MudCard>
+                    <MudCardMedia Image="@_selectedItem.ImageUrl" Title="@_selectedItem.Name" />
+                    <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage">
+                        <ButtonTemplate>
+                            <MudFab HtmlTag="label"
+                                    Color="Color.Secondary"
+                                    Icon="@Icons.Material.Filled.Image"
+                                    Label="Load picture"
+                                    for="@context.Id" />
+                        </ButtonTemplate>
+                    </MudFileUpload>
+                    <MudCardContent>
+                        <MudList>
+                            @foreach (var step in _selectedItem.Directions.OrderBy(o => o.Number))
+                            {
+                                <MudListItem>
+                                    @step.Description
+                                </MudListItem>
+                            }
+                        </MudList>
+                        <MudTextField @bind-Value="NewStepDescription" Label="Standard" Variant="Variant.Text"></MudTextField>
+                        <MudTextField @bind-Value="NewStepNumber" Label="Standard" Variant="Variant.Text"></MudTextField>
+                        <MudButton Variant="Variant.Filled" OnClick="AddStep">Add step</MudButton>
+                    </MudCardContent>
+                </MudCard>
+            }
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private List<Recipe> _recipes;
+    private Recipe _selectedItem;
+    public string NewRecipe { get; set; }
+    public string NewStepDescription { get; set; }
+    public int NewStepNumber { get; set; }
+
+    protected override void OnInitialized()
+    {
+        // Initialize the list of items with some data
+        _recipes = RecipeService.GetRecipes();
+
+        // Set the initial selected item if needed
+        _selectedItem = _recipes.FirstOrDefault();
+    }
+
+    private void SelectItem(Recipe recipe)
+    {
+        _selectedItem = recipe;
+    }
+
+    private void AddRecipe()
+    {
+        RecipeService.AddRecipe(NewRecipe);
+    }
+
+    private void AddStep()
+    {
+        var step = new Step
+        {
+            Description = NewStepDescription,
+            Number = NewStepNumber
+        };
+
+        RecipeService.AddStep(_selectedItem.Id, step);
+    }
+
+    private async Task UploadImage(IBrowserFile file)
+    {
+        await RecipeService.AddImage(_selectedItem.Id, file);
+    }
+}

@@ -12,4 +12,12 @@ public class Recipe
     public ICollection<Ingredient> Ingredients { get; init; }
     public Cuisine Cuisine { get; init; }
     public ICollection<Step> Directions { get; init; }
+    public byte[] Image { get; private set; }
+    public string ImageUrl { get; private set; }
+
+    public void AddImage(byte[] image)
+    {
+        Image = image;
+        ImageUrl = $"data:image/png;base64,{Convert.ToBase64String(image)}";
+    }
 }
