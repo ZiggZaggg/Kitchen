@@ -6,7 +6,7 @@
 
 <MudContainer>
     <MudGrid>
-        <MudItem xs="4">
+        <MudItem xs="3">
             <MudList Clickable="true">
                 @foreach (var item in _recipes)
                 {
@@ -18,32 +18,41 @@
             <MudTextField @bind-Value="NewRecipe" Label="Standard" Variant="Variant.Text"></MudTextField>
             <MudButton Variant="Variant.Filled" OnClick="AddRecipe">Add recipe</MudButton>
         </MudItem>
-        <MudItem xs="8">
-            @if (_selectedItem != null)
+        <MudItem xs="9">
+            @if (_selectedRecipe != null)
             {
                 <MudCard>
-                    <MudCardMedia Image="@_selectedItem.ImageUrl" Title="@_selectedItem.Name" />
-                    <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage">
-                        <ButtonTemplate>
-                            <MudFab HtmlTag="label"
-                                    Color="Color.Secondary"
-                                    Icon="@Icons.Material.Filled.Image"
-                                    Label="Load picture"
-                                    for="@context.Id" />
-                        </ButtonTemplate>
-                    </MudFileUpload>
+                    <MudCardMedia Image="@_selectedRecipe.ImageUrl" Title="@_selectedRecipe.Name"/>
                     <MudCardContent>
-                        <MudList>
-                            @foreach (var step in _selectedItem.Directions.OrderBy(o => o.Number))
-                            {
-                                <MudListItem>
-                                    @step.Description
-                                </MudListItem>
-                            }
-                        </MudList>
-                        <MudTextField @bind-Value="NewStepDescription" Label="Standard" Variant="Variant.Text"></MudTextField>
-                        <MudTextField @bind-Value="NewStepNumber" Label="Standard" Variant="Variant.Text"></MudTextField>
-                        <MudButton Variant="Variant.Filled" OnClick="AddStep">Add step</MudButton>
+                        @foreach (var instruction in _selectedRecipe.Instructions)
+                        {
+                            <MudGrid>
+                                <MudItem xs="11">
+                                    <MudTextField ReadOnly=!ReadOnly Variant="Variant.Text" Value="instruction.Description"/>
+                                </MudItem>
+                                <MudItem xs="1">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" aria-label="delete"
+                                                   OnClick="() => DeleteInstruction(instruction)" Class=@(ReadOnly ? "" : "invisible")></MudIconButton>
+                                </MudItem>
+                            </MudGrid>
+                        }
+                        <MudContainer Class="d-flex" Style="gap: 10px; align-items: center;">
+                            <MudIconButton Icon="@Icons.Material.Filled.Add" aria-label="add"
+                                           OnClick="AddInstruction" Class=@(ReadOnly ? "" : "invisible")></MudIconButton>
+                            <MudIconButton Icon="@Icons.Material.Filled.Save" aria-label="save"
+                                           OnClick="SaveInstructions" Class=@(ReadOnly ? "" : "invisible")></MudIconButton>
+                            <MudIconButton Icon="@Icons.Material.Filled.DeleteForever" aria-label="save"
+                                           OnClick="DeleteRecipe" Class=@(ReadOnly ? "" : "invisible")></MudIconButton>
+                            <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage" Class=@(ReadOnly ? "" : "invisible")>
+                                <ButtonTemplate>
+                                    <MudFab HtmlTag="label"
+                                            Color="Color.Dark"
+                                            Icon="@Icons.Material.Filled.Image"
+                                            Label="Load picture"
+                                            for="@context.Id"/>
+                                </ButtonTemplate>
+                            </MudFileUpload>
+                        </MudContainer>
                     </MudCardContent>
                 </MudCard>
             }
@@ -53,43 +62,63 @@
 
 @code {
     private List<Recipe> _recipes;
-    private Recipe _selectedItem;
+    private Recipe _selectedRecipe;
     public string NewRecipe { get; set; }
-    public string NewStepDescription { get; set; }
-    public int NewStepNumber { get; set; }
+
+    [CascadingParameter]
+    public bool ReadOnly { get; set; }
 
     protected override void OnInitialized()
     {
         // Initialize the list of items with some data
         _recipes = RecipeService.GetRecipes();
 
-        // Set the initial selected item if needed
-        _selectedItem = _recipes.FirstOrDefault();
+        // Set the initial selected item
+        _selectedRecipe = _recipes.FirstOrDefault();
     }
 
     private void SelectItem(Recipe recipe)
     {
-        _selectedItem = recipe;
+        _selectedRecipe = recipe;
     }
 
     private void AddRecipe()
     {
         RecipeService.AddRecipe(NewRecipe);
+        StateHasChanged();
     }
 
-    private void AddStep()
+    private void AddInstruction()
     {
-        var step = new Step
+        var instruction = new Step
         {
-            Description = NewStepDescription,
-            Number = NewStepNumber
+            Description = "Toggle edit and save new instruction here."
         };
 
-        RecipeService.AddStep(_selectedItem.Id, step);
+        RecipeService.AddInstruction(_selectedRecipe.Id, instruction);
+        StateHasChanged();
+    }
+
+    private void DeleteInstruction(Step instruction)
+    {
+        RecipeService.DeleteInstruction(_selectedRecipe.Id, instruction);
+        StateHasChanged();
     }
 
     private async Task UploadImage(IBrowserFile file)
     {
-        await RecipeService.AddImage(_selectedItem.Id, file);
+        await RecipeService.AddImage(_selectedRecipe.Id, file);
+        StateHasChanged();
+    }
+
+    private void SaveInstructions()
+    {
+
+    }
+
+    private void DeleteRecipe()
+    {
+        RecipeService.DeleteRecipe(_selectedRecipe.Id);
+        StateHasChanged();
     }
 }

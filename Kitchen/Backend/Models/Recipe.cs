@@ -11,7 +11,7 @@ public class Recipe
     public string Description { get; init; }
     public ICollection<Ingredient> Ingredients { get; init; }
     public Cuisine Cuisine { get; init; }
-    public ICollection<Step> Directions { get; init; }
+    public ICollection<Step> Instructions { get; init; }
     public byte[] Image { get; private set; }
     public string ImageUrl { get; private set; }
 

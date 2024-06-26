@@ -27,11 +27,41 @@ public class RecipeService
         context.SaveChanges();
     }
 
-    public void AddStep(long id, Step step)
+    public void AddInstruction(long id, Step instruction)
     {
         using var context = _dbContextFactory.CreateDbContext();
         var recipe = context.Recipes.Single(o => o.Id == id);
-        recipe.Directions.Add(step);
+        recipe.Instructions.Add(instruction);
+        context.SaveChanges();
+    }
+
+    public void DeleteInstruction(long id, Step instruction)
+    {
+        using var context = _dbContextFactory.CreateDbContext();
+        var recipe = context.Recipes.Single(o => o.Id == id);
+        var instructionToRemove = recipe.Instructions.FirstOrDefault(o => o.Description == instruction.Description);
+
+        if (instructionToRemove != null)
+        {
+            recipe.Instructions.Remove(instructionToRemove);
+        }
+        context.SaveChanges();
+    }
+
+    public void SaveInstructions()
+    {
+
+    }
+
+    public void DeleteRecipe(long id)
+    {
+        using var context = _dbContextFactory.CreateDbContext();
+        var recipeToRemove = context.Recipes.Single(o => o.Id == id);
+
+        if (recipeToRemove != null)
+        {
+            context.Recipes.Remove(recipeToRemove);
+        }
         context.SaveChanges();
     }
 
