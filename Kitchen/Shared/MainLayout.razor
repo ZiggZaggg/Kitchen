@@ -8,9 +8,17 @@
     <MudPaper Elevation="25">
         <MudToolBar>
             <MudIconButton Icon="@Icons.Material.Outlined.FoodBank" Href="/cook" />
+            <MudSwitch @bind-Value="@ReadOnly" Label="Edit" Color="Color.Info" Style="margin-left: auto;" />
         </MudToolBar>
     </MudPaper>
     <MudMainContent>
-        @Body
+        <CascadingValue Value="@ReadOnly">
+            @Body
+        </CascadingValue>
     </MudMainContent>
 </MudLayout>
+
+@code
+{
+    private bool ReadOnly { get; set; }
+}
