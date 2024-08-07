@@ -2,33 +2,36 @@
 
 <MudDialog>
     <DialogContent>
-        <MudNumericField @bind-Value="OldNumber" Label="Number" Variant="Variant.Text" Min="1"/>
-        <MudTextField @bind-Value="OldInstruction" T="string" Label="Instruction" Variant="Variant.Text"/>
+        <MudNumericField @bind-Value="Number" Label="Number" Variant="Variant.Text" Min="1"/>
+        <MudTextField @bind-Value="Description" T="string" Label="Description" Variant="Variant.Text"/>
     </DialogContent>
     <DialogActions>
         <MudButton Color="Color.Primary" OnClick="Cancel">Cancel</MudButton>
         <MudButton Color="Color.Primary" OnClick="Save">Save</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Delete">Delete</MudButton>
     </DialogActions>
 </MudDialog>
 
 @code {
-    private string NewInstruction { get; set; }
-    private int NewNumber { get; set; }
-
     [CascadingParameter] 
     MudDialogInstance MudDialog { get; set; }
 
     [Parameter]
-    public string OldInstruction { get; set; }
+    public string Description { get; set; }
 
     [Parameter]
-    public int OldNumber { get; set; }
+    public int Number { get; set; }
+
+    void Cancel() => MudDialog.Cancel();
 
     void Save()
     {
-        MudDialog.Close(DialogResult.Ok(new Instruction { Description = OldInstruction, Number = OldNumber}));
+        MudDialog.Close(DialogResult.Ok(new Instruction { Description = Description, Number = Number}));
     }
 
-    void Cancel() => MudDialog.Cancel();
+    void Delete()
+    {
+        MudDialog.Close(DialogResult.Ok("Delete"));
+    }
 
 }

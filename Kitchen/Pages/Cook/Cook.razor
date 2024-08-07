@@ -45,8 +45,6 @@
                             </MudFileUpload>
                             <MudIconButton Icon="@Icons.Material.Filled.Add" aria-label="add"
                                            OnClick="AddInstruction" Class=@(Editable ? "" : "invisible")></MudIconButton>
-                            <MudIconButton Icon="@Icons.Material.Filled.Save" aria-label="save"
-                                           OnClick="SaveInstructions" Class=@(Editable ? "" : "invisible")></MudIconButton>
                             <MudIconButton Icon="@Icons.Material.Filled.DeleteForever" aria-label="save"
                                            OnClick="DeleteRecipe" Class=@(Editable ? "" : "invisible")></MudIconButton>
                         </MudContainer>
@@ -97,29 +95,13 @@
         StateHasChanged();
     }
 
-    private void DeleteInstruction(Instruction instruction)
-    {
-        RecipeService.DeleteInstruction(_selectedRecipe.Id, instruction);
-        StateHasChanged();
-    }
-
     private async Task UploadImage(IBrowserFile file)
     {
         await RecipeService.AddImage(_selectedRecipe.Id, file);
         StateHasChanged();
     }
 
-    private void SaveInstructions()
-    {
-
-    }
-
-    private void UpdateInstruction()
-    {
-
-    }
-
-    private async Task OpenInstructionDialog(long instructionId, string oldDescription, int oldNumber)
+    private async Task OpenInstructionDialog(long instructionId, string description, int number)
     {
         if (!Editable)
         {
@@ -128,8 +110,8 @@
 
         var parameters = new DialogParameters<InstructionDialog>
         {
-            { x => x.OldInstruction, oldDescription},
-            { x => x.OldNumber, oldNumber},
+            { x => x.Description, description},
+            { x => x.Number, number},
         };
         var options = new DialogOptions { CloseOnEscapeKey = true };
 
@@ -141,7 +123,14 @@
             return;
         }
 
-        RecipeService.SaveInstruction(_selectedRecipe.Id, instructionId, (Instruction)result.Data);
+        if (result.Data as string == "Delete")
+        {
+            RecipeService.DeleteInstruction(_selectedRecipe.Id, instructionId);
+            StateHasChanged();
+            return;
+        }
+
+        RecipeService.SaveInstruction(_selectedRecipe.Id, instructionId, result.Data as Instruction);
         StateHasChanged();
     }
 
