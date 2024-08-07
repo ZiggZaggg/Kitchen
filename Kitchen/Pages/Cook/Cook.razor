@@ -3,6 +3,7 @@
 @using Kitchen.Backend.Services
 
 @inject RecipeService RecipeService
+@inject IDialogService DialogService
 
 <MudContainer>
     <MudGrid>
@@ -15,8 +16,8 @@
                     </MudListItem>
                 }
             </MudList>
-            <MudTextField @bind-Value="NewRecipe" Label="Standard" Variant="Variant.Text"></MudTextField>
-            <MudButton Variant="Variant.Filled" OnClick="AddRecipe">Add recipe</MudButton>
+            <MudTextField @bind-Value="NewRecipe" Label="Standard" Variant="Variant.Text" Class=@(Editable ? "" : "invisible")></MudTextField>
+            <MudButton Variant="Variant.Filled" OnClick="AddRecipe" Class=@(Editable ? "" : "invisible")>Add recipe</MudButton>
         </MudItem>
         <MudItem xs="9">
             @if (_selectedRecipe != null)
@@ -26,24 +27,14 @@
                     <MudCardContent>
                         @foreach (var instruction in _selectedRecipe.Instructions)
                         {
-                            <MudGrid>
-                                <MudItem xs="11">
-                                    <MudTextField ReadOnly=!ReadOnly Variant="Variant.Text" Value="instruction.Description"/>
-                                </MudItem>
-                                <MudItem xs="1">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" aria-label="delete"
-                                                   OnClick="() => DeleteInstruction(instruction)" Class=@(ReadOnly ? "" : "invisible")></MudIconButton>
-                                </MudItem>
-                            </MudGrid>
+                            <MudList Clickable="Editable">
+                                <MudListItem @onclick="() => OpenInstructionDialog(instruction.Id, instruction.Description, instruction.Number)">  
+                                    @instruction.Number @instruction.Description
+                                </MudListItem>
+                            </MudList>
                         }
                         <MudContainer Class="d-flex" Style="gap: 10px; align-items: center;">
-                            <MudIconButton Icon="@Icons.Material.Filled.Add" aria-label="add"
-                                           OnClick="AddInstruction" Class=@(ReadOnly ? "" : "invisible")></MudIconButton>
-                            <MudIconButton Icon="@Icons.Material.Filled.Save" aria-label="save"
-                                           OnClick="SaveInstructions" Class=@(ReadOnly ? "" : "invisible")></MudIconButton>
-                            <MudIconButton Icon="@Icons.Material.Filled.DeleteForever" aria-label="save"
-                                           OnClick="DeleteRecipe" Class=@(ReadOnly ? "" : "invisible")></MudIconButton>
-                            <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage" Class=@(ReadOnly ? "" : "invisible")>
+                            <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage" Class=@(Editable ? "" : "invisible")>
                                 <ButtonTemplate>
                                     <MudFab HtmlTag="label"
                                             Color="Color.Dark"
@@ -52,6 +43,12 @@
                                             for="@context.Id"/>
                                 </ButtonTemplate>
                             </MudFileUpload>
+                            <MudIconButton Icon="@Icons.Material.Filled.Add" aria-label="add"
+                                           OnClick="AddInstruction" Class=@(Editable ? "" : "invisible")></MudIconButton>
+                            <MudIconButton Icon="@Icons.Material.Filled.Save" aria-label="save"
+                                           OnClick="SaveInstructions" Class=@(Editable ? "" : "invisible")></MudIconButton>
+                            <MudIconButton Icon="@Icons.Material.Filled.DeleteForever" aria-label="save"
+                                           OnClick="DeleteRecipe" Class=@(Editable ? "" : "invisible")></MudIconButton>
                         </MudContainer>
                     </MudCardContent>
                 </MudCard>
@@ -66,7 +63,7 @@
     public string NewRecipe { get; set; }
 
     [CascadingParameter]
-    public bool ReadOnly { get; set; }
+    public bool Editable { get; set; }
 
     protected override void OnInitialized()
     {
@@ -90,16 +87,17 @@
 
     private void AddInstruction()
     {
-        var instruction = new Step
+        var instruction = new Instruction
         {
-            Description = "Toggle edit and save new instruction here."
+            Description = "",
+            Number = _selectedRecipe.Instructions.Count + 1
         };
 
         RecipeService.AddInstruction(_selectedRecipe.Id, instruction);
         StateHasChanged();
     }
 
-    private void DeleteInstruction(Step instruction)
+    private void DeleteInstruction(Instruction instruction)
     {
         RecipeService.DeleteInstruction(_selectedRecipe.Id, instruction);
         StateHasChanged();
@@ -114,6 +112,37 @@
     private void SaveInstructions()
     {
 
+    }
+
+    private void UpdateInstruction()
+    {
+
+    }
+
+    private async Task OpenInstructionDialog(long instructionId, string oldDescription, int oldNumber)
+    {
+        if (!Editable)
+        {
+            return;
+        }
+
+        var parameters = new DialogParameters<InstructionDialog>
+        {
+            { x => x.OldInstruction, oldDescription},
+            { x => x.OldNumber, oldNumber},
+        };
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+
+        var dialog = await DialogService.ShowAsync<InstructionDialog>("Update instruction", parameters, options);
+        var result = await dialog.Result;
+
+        if (result.Canceled)
+        {
+            return;
+        }
+
+        RecipeService.SaveInstruction(_selectedRecipe.Id, instructionId, (Instruction)result.Data);
+        StateHasChanged();
     }
 
     private void DeleteRecipe()

@@ -8,11 +8,11 @@
     <MudPaper Elevation="25">
         <MudToolBar>
             <MudIconButton Icon="@Icons.Material.Outlined.FoodBank" Href="/cook" />
-            <MudSwitch @bind-Value="@ReadOnly" Label="Edit" Color="Color.Info" Style="margin-left: auto;" />
+            <MudSwitch @bind-Value="@Editable" Label="Edit" Color="Color.Info" Style="margin-left: auto;" />
         </MudToolBar>
     </MudPaper>
     <MudMainContent>
-        <CascadingValue Value="@ReadOnly">
+        <CascadingValue Value="@Editable">
             @Body
         </CascadingValue>
     </MudMainContent>
@@ -20,5 +20,5 @@
 
 @code
 {
-    private bool ReadOnly { get; set; }
+    private bool Editable { get; set; }
 }

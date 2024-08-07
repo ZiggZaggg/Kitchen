@@ -27,7 +27,7 @@ public class RecipeService
         context.SaveChanges();
     }
 
-    public void AddInstruction(long id, Step instruction)
+    public void AddInstruction(long id, Instruction instruction)
     {
         using var context = _dbContextFactory.CreateDbContext();
         var recipe = context.Recipes.Single(o => o.Id == id);
@@ -35,7 +35,7 @@ public class RecipeService
         context.SaveChanges();
     }
 
-    public void DeleteInstruction(long id, Step instruction)
+    public void DeleteInstruction(long id, Instruction instruction)
     {
         using var context = _dbContextFactory.CreateDbContext();
         var recipe = context.Recipes.Single(o => o.Id == id);
@@ -48,9 +48,15 @@ public class RecipeService
         context.SaveChanges();
     }
 
-    public void SaveInstructions()
+    public void SaveInstruction(long recipeId, long instructionId, Instruction instruction)
     {
+        using var context = _dbContextFactory.CreateDbContext();
+        var recipe = context.Recipes.Single(o => o.Id == recipeId);
+        var oldInstruction = recipe.Instructions.Single(o => o.Id == instructionId);
 
+        oldInstruction.Description = instruction.Description;
+        oldInstruction.Number = instruction.Number;
+        context.SaveChanges();
     }
 
     public void DeleteRecipe(long id)
