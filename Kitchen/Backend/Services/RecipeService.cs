@@ -35,16 +35,15 @@ public class RecipeService
         context.SaveChanges();
     }
 
-    public void DeleteInstruction(long id, Instruction instruction)
+    public void DeleteInstruction(long recipeId, long instructionId)
     {
         using var context = _dbContextFactory.CreateDbContext();
-        var recipe = context.Recipes.Single(o => o.Id == id);
-        var instructionToRemove = recipe.Instructions.FirstOrDefault(o => o.Description == instruction.Description);
+        var recipe = context.Recipes.Single(o => o.Id == recipeId);
+        var instructionToRemove = recipe.Instructions.FirstOrDefault(o => o.Id == instructionId);
 
-        if (instructionToRemove != null)
-        {
-            recipe.Instructions.Remove(instructionToRemove);
-        }
+        if (instructionToRemove == null) return;
+
+        recipe.Instructions.Remove(instructionToRemove);
         context.SaveChanges();
     }
 
