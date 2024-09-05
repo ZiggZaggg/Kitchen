@@ -1,0 +1,56 @@
+﻿@using Kitchen.Backend.Services
+@using Kitchen.Backend.Models
+
+@inject RecipeService RecipeService
+
+<MudContainer Class="d-flex" Style="gap: 10px; align-items: center;">
+    <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage" Class=@(Editable ? "" : "invisible")>
+        <ButtonTemplate>
+            <MudFab HtmlTag="label"
+                    Color="Color.Dark"
+                    Icon="@Icons.Material.Filled.Image"
+                    Label="Load picture"
+                    for="@context.Id"/>
+        </ButtonTemplate>
+    </MudFileUpload>
+    <MudIconButton Icon="@Icons.Material.Filled.Add" aria-label="add"
+                   OnClick="AddInstruction" Class=@(Editable ? "" : "invisible")></MudIconButton>
+    <MudIconButton Icon="@Icons.Material.Filled.DeleteForever" aria-label="save"
+                   OnClick="DeleteRecipe" Class=@(Editable ? "" : "invisible")></MudIconButton>
+</MudContainer>
+
+@code {
+
+    [Parameter]
+    public Recipe Recipe { get; set; }
+
+    [Parameter]
+    public EventCallback<Recipe> RecipeChanged { get; set; }
+
+    [Parameter]
+    public bool Editable { get; set; }
+
+    private async Task UploadImage(IBrowserFile file)
+    {
+        await RecipeService.AddImage(Recipe.Id, file);
+        await RecipeChanged.InvokeAsync(Recipe);
+    }
+
+    private async Task AddInstruction()
+    {
+        var instruction = new Instruction
+            {
+                Description = "",
+                Number = Recipe.Instructions.Count + 1
+            };
+
+        RecipeService.AddInstruction(Recipe.Id, instruction);
+        await RecipeChanged.InvokeAsync(Recipe);
+    }
+
+    private async Task DeleteRecipe()
+    {
+        RecipeService.DeleteRecipe(Recipe.Id);
+        await RecipeChanged.InvokeAsync(Recipe);
+    }
+}

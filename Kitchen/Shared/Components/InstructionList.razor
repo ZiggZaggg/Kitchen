@@ -1,0 +1,61 @@
+﻿@using Kitchen.Pages.Cook
+@using Kitchen.Backend.Services
+@using Kitchen.Backend.Models
+@using System.ComponentModel.DataAnnotations
+
+@inject RecipeService RecipeService
+@inject IDialogService DialogService
+
+<MudList Clickable="Editable">
+    <MudListItem @onclick="OpenInstructionDialog">  
+        @Instruction.Number @Instruction.Description
+    </MudListItem>
+</MudList>
+
+@code {
+
+    [Parameter]
+    public Instruction Instruction { get; set; }
+
+    [Parameter]
+    public EventCallback<Instruction> InstructionChanged { get; set; }
+
+    [Parameter]
+    public bool Editable { get; set; }
+
+    [Parameter]
+    public long RecipeId { get; set; }
+
+    private async Task OpenInstructionDialog()
+    {
+        if (!Editable)
+        {
+            return;
+        }
+
+        var parameters = new DialogParameters<InstructionDialog>
+        {
+            { x => x.Description, Instruction.Description},
+            { x => x.Number, Instruction.Number},
+        };
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+
+        var dialog = await DialogService.ShowAsync<InstructionDialog>("Update instruction", parameters, options);
+        var result = await dialog.Result;
+
+        if (result.Canceled)
+        {
+            return;
+        }
+
+        if (result.Data as string == "Delete")
+        {
+            RecipeService.DeleteInstruction(RecipeId, Instruction.Id);
+            await InstructionChanged.InvokeAsync(Instruction);
+            return;
+        }
+
+        RecipeService.SaveInstruction(RecipeId, Instruction.Id, result.Data as Instruction);
+        await InstructionChanged.InvokeAsync(Instruction);
+    }
+}
