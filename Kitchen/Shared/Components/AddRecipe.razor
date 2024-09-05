@@ -1,0 +1,20 @@
+﻿@using Kitchen.Backend.Services
+
+@inject RecipeService RecipeService
+
+<MudTextField @bind-Value="NewRecipe" Label="Standard" Variant="Variant.Text" Class=@(Editable ? "" : "invisible")></MudTextField>
+<MudButton Variant="Variant.Filled" OnClick="Add" Class=@(Editable ? "" : "invisible")>Add recipe</MudButton>
+
+@code {
+
+    [Parameter]
+    public bool Editable { get; set; }
+
+    public string NewRecipe { get; set; }
+
+    private void Add()
+    {
+        RecipeService.AddRecipe(NewRecipe);
+        StateHasChanged();
+    }
+}

@@ -1,9 +1,9 @@
 ﻿@page "/cook"
 @using Kitchen.Backend.Models
 @using Kitchen.Backend.Services
+@using Kitchen.Shared.Components
 
 @inject RecipeService RecipeService
-@inject IDialogService DialogService
 
 <MudContainer>
     <MudGrid>
@@ -16,38 +16,19 @@
                     </MudListItem>
                 }
             </MudList>
-            <MudTextField @bind-Value="NewRecipe" Label="Standard" Variant="Variant.Text" Class=@(Editable ? "" : "invisible")></MudTextField>
-            <MudButton Variant="Variant.Filled" OnClick="AddRecipe" Class=@(Editable ? "" : "invisible")>Add recipe</MudButton>
+            <AddRecipe Editable="Editable"></AddRecipe>
         </MudItem>
         <MudItem xs="9">
-            @if (_selectedRecipe != null)
+            @if (SelectedRecipe != null)
             {
                 <MudCard>
-                    <MudCardMedia Image="@_selectedRecipe.ImageUrl" Title="@_selectedRecipe.Name"/>
+                    <MudCardMedia Image="@SelectedRecipe.ImageUrl" Title="@SelectedRecipe.Name"/>
                     <MudCardContent>
-                        @foreach (var instruction in _selectedRecipe.Instructions)
+                        @foreach (var instruction in SelectedRecipe.Instructions)
                         {
-                            <MudList Clickable="Editable">
-                                <MudListItem @onclick="() => OpenInstructionDialog(instruction.Id, instruction.Description, instruction.Number)">  
-                                    @instruction.Number @instruction.Description
-                                </MudListItem>
-                            </MudList>
+                            <InstructionList Instruction=@instruction RecipeId=@SelectedRecipe.Id Editable="Editable"></InstructionList>
                         }
-                        <MudContainer Class="d-flex" Style="gap: 10px; align-items: center;">
-                            <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage" Class=@(Editable ? "" : "invisible")>
-                                <ButtonTemplate>
-                                    <MudFab HtmlTag="label"
-                                            Color="Color.Dark"
-                                            Icon="@Icons.Material.Filled.Image"
-                                            Label="Load picture"
-                                            for="@context.Id"/>
-                                </ButtonTemplate>
-                            </MudFileUpload>
-                            <MudIconButton Icon="@Icons.Material.Filled.Add" aria-label="add"
-                                           OnClick="AddInstruction" Class=@(Editable ? "" : "invisible")></MudIconButton>
-                            <MudIconButton Icon="@Icons.Material.Filled.DeleteForever" aria-label="save"
-                                           OnClick="DeleteRecipe" Class=@(Editable ? "" : "invisible")></MudIconButton>
-                        </MudContainer>
+                        <RecipeTools @bind-Recipe=SelectedRecipe Editable="Editable"></RecipeTools>
                     </MudCardContent>
                 </MudCard>
             }
@@ -57,7 +38,9 @@
 
 @code {
     private List<Recipe> _recipes;
-    private Recipe _selectedRecipe;
+
+    public Recipe SelectedRecipe { get; set; }
+
     public string NewRecipe { get; set; }
 
     [CascadingParameter]
@@ -69,74 +52,11 @@
         _recipes = RecipeService.GetRecipes();
 
         // Set the initial selected item
-        _selectedRecipe = _recipes.FirstOrDefault();
+        SelectedRecipe = _recipes.FirstOrDefault();
     }
 
     private void SelectItem(Recipe recipe)
     {
-        _selectedRecipe = recipe;
-    }
-
-    private void AddRecipe()
-    {
-        RecipeService.AddRecipe(NewRecipe);
-        StateHasChanged();
-    }
-
-    private void AddInstruction()
-    {
-        var instruction = new Instruction
-        {
-            Description = "",
-            Number = _selectedRecipe.Instructions.Count + 1
-        };
-
-        RecipeService.AddInstruction(_selectedRecipe.Id, instruction);
-        StateHasChanged();
-    }
-
-    private async Task UploadImage(IBrowserFile file)
-    {
-        await RecipeService.AddImage(_selectedRecipe.Id, file);
-        StateHasChanged();
-    }
-
-    private async Task OpenInstructionDialog(long instructionId, string description, int number)
-    {
-        if (!Editable)
-        {
-            return;
-        }
-
-        var parameters = new DialogParameters<InstructionDialog>
-        {
-            { x => x.Description, description},
-            { x => x.Number, number},
-        };
-        var options = new DialogOptions { CloseOnEscapeKey = true };
-
-        var dialog = await DialogService.ShowAsync<InstructionDialog>("Update instruction", parameters, options);
-        var result = await dialog.Result;
-
-        if (result.Canceled)
-        {
-            return;
-        }
-
-        if (result.Data as string == "Delete")
-        {
-            RecipeService.DeleteInstruction(_selectedRecipe.Id, instructionId);
-            StateHasChanged();
-            return;
-        }
-
-        RecipeService.SaveInstruction(_selectedRecipe.Id, instructionId, result.Data as Instruction);
-        StateHasChanged();
-    }
-
-    private void DeleteRecipe()
-    {
-        RecipeService.DeleteRecipe(_selectedRecipe.Id);
-        StateHasChanged();
+        SelectedRecipe = recipe;
     }
 }
